@@ -1,0 +1,45 @@
+# 更多部署方式详见：http://ldapdoc.eryajf.net/pages/f081dc/
+version: '3'
+
+networks:
+  go-ldap-admin:
+    driver: bridge
+
+services:
+  go-ldap-admin:
+    image: registry.cn-hangzhou.aliyuncs.com/eryajf/go-ldap-admin
+    container_name: go-ldap-admin
+    hostname: go-ldap-admin
+    restart: always
+    environment:
+      WAIT_HOSTS: openldap:389
+      DB_DRIVER: sqlite3
+    ports:
+      - 8888:8888
+    volumes:
+      - ./data/go-ldap-admin:/app/data
+    depends_on:
+      - openldap
+    links:
+      - openldap:go-ldap-admin-openldap
+    networks:
+      - go-ldap-admin
+
+  openldap:
+    image: registry.cn-hangzhou.aliyuncs.com/eryajf/openldap:1.4.1
+    container_name: go-ldap-admin-openldap
+    hostname: go-ldap-admin-openldap
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+      LDAP_ORGANISATION: "eryajf.net"
+      LDAP_DOMAIN: "eryajf.net"
+      LDAP_ADMIN_PASSWORD: "123456"
+    command: [ '--copy-service' ]
+    volumes:
+      - ./data/openldap/database:/var/lib/ldap
+      - ./data/openldap/config:/etc/ldap/slapd.d
+    ports:
+      - 389:389
+    networks:
+      - go-ldap-admin
